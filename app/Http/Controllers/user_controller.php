@@ -16,7 +16,7 @@ class user_controller extends Controller
                 "message" => 'Incorrect email or password'
             ],401);
         }
-        if($user->password == $request->password)
+        if(decrypt($user->password) == $request->password)
         {
             $token = new token($data);
             $token = $token->encode();
@@ -67,7 +67,7 @@ class user_controller extends Controller
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
-        $user->password = $request->password;
+        $user->password = encrypt($request->password);
         $user->save();
         $token = new token(['email' => $user->email]);
         $token = $token->encode();
