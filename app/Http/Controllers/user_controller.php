@@ -4,9 +4,43 @@ use Illuminate\Http\Request;
 use App\User;
 use Firebase\JWT\JWT;
 use App\Helpers\Token;
+use App\Helpers\passwordGenerator;
 use Illuminate\Support\Facades\DB;
 class user_controller extends Controller
 {
+    /**
+     * Restore the passwords of the user in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function passrestore(Request $request, $id)
+    {
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::where('email', '=', $user_email)->first();
+        $user_id = $user->id;
+        if($user_id!=$id){
+            return response()->json([
+                "message" => 'Error, solo puedes editar tu usuario'
+            ],401);
+        }
+        $newPass = new PasswordGenerator();
+        $newPass = $newPass->newPass();
+
+        $user->password = encrypt($newPass);
+        $user->save();
+        
+        return response()->json([
+            "message" => 'Contraseña cambiada y enviada. Tu nueva contraseña es: '.$newPass
+        ],200);
+    }
+    
+    
+    
     public function login(Request $request)
     {
         $data = ['email' => $request->email];

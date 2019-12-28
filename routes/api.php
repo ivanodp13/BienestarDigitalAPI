@@ -20,6 +20,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::post('login', 'user_controller@login');
 Route::post('register', 'user_controller@store');
+
 Route::middleware(['Checkout'])->group(function(){
     Route::apiResource('users', 'user_controller');
+    Route::put('passrestore/{user}', 'user_controller@passrestore');
 });
+
