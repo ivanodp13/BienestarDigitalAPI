@@ -1,30 +1,36 @@
 <?php
-
 namespace App;
-
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-
-class User extends Authenticatable
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+class User extends Model
 {
-    use Notifiable;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'name', 'email', 'password',
-    ];
-
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
-     */
-    protected $hidden = [
-        'password', 'remember_token',
-    ];
+    protected $table ='users';
+    protected $filliable = ['name','email','password'];
+    public function categories()
+    {
+        return $this->hasMany(Category::class);
+    }
+    public function passwords()
+    {
+        return $this->hasManyThrough('App\Password','App\Category');
+    }
+    /*public function register(Request $request)
+    {
+        $user = new self();
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->password = $request->password;
+        $user->save();
+        return $user->email;
+    }
+    public function login(Request $request)
+    {
+        $user = new self();
+        $user_email = $request->email;
+        $user_password = $request->password;
+        $email = DB::table('users')->where('email', $user_email)->value('email');
+        $password = DB::table('users')->where('password', $user_password)->value('password');
+        var_dump($email);
+        return $email;
+    }*/
 }
