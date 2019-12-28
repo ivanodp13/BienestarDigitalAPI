@@ -4,7 +4,6 @@ use Illuminate\Http\Request;
 use App\User;
 use Firebase\JWT\JWT;
 use App\Helpers\Token;
-use App\Category;
 use Illuminate\Support\Facades\DB;
 class user_controller extends Controller
 {
@@ -143,22 +142,5 @@ class user_controller extends Controller
         return response()->json([
             "message" => 'Usuario, categorias y contraseñas eliminadas correctamente'
         ],200);
-    }
-    public function showCategoriesAndPasswords(Request $request)
-    {
-        $request_token = $request->header('Authorization');
-        $token = new token();
-        $decoded_token = $token->decode($request_token);
-        $user_email = $decoded_token->email;
-        $user = User::where('email', '=', $user_email)->first();
-        $user_id = $user->id;
-        $user_categories = $user->categories;
-        $user_passwords = $user->passwords;
-        $user_categories_object = DB::table('categories')->select('id')->where('user_id', '=', $user_id)->get();
-        $sql= DB::table('passwords')->join('categories', 'passwords.category_id', '=', 'categories.id')->where('categories.user_id', '=', $user_id)->get();
-        
-        return response()->json([
-            $sql
-        ], 200);
     }
 }
