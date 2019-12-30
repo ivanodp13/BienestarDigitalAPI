@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateRestrictTable extends Migration
+class CreateRestrictionsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,13 @@ class CreateRestrictTable extends Migration
      */
     public function up()
     {
-        Schema::create('restrict', function (Blueprint $table) {
+        Schema::create('restrictions', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('user_id');
             $table->unsignedInteger('app_id');
-            $table->time('MaxTime');
-            $table->time('InitTime');
-            $table->time('EndTime');
+            $table->time('MaxTime')->nullable();
+            $table->time('InitTime')->nullable();
+            $table->time('EndTime')->nullable();
             $table->timestamps();
         });
     }
@@ -31,6 +31,6 @@ class CreateRestrictTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('restrict');
+        Schema::dropIfExists('restrictions');
     }
 }

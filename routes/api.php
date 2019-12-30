@@ -26,6 +26,7 @@ Route::post('appsimport', 'app_controller@import');
 
 Route::middleware(['Checkout'])->group(function(){
     Route::apiResource('users', 'user_controller');
+    Route::apiResource('restrictions', 'restriction_controller');
     Route::put('passrestore/{user}', 'user_controller@passrestore');
     Route::put('passedit/{user}', 'user_controller@passedit');
     Route::post('usageimport', 'usage_controller@import');
