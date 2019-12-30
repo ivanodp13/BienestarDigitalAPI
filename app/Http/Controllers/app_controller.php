@@ -13,7 +13,7 @@ class app_controller extends Controller
         //print_r($csv);
 
         $array_num = count($csv);
-        for ($i = 0; $i < $array_num; ++$i){
+        for ($i = 1; $i < $array_num; ++$i){
             $app = new App();
             $app->name = $csv[$i][0];
             $app->icon = $csv[$i][1];

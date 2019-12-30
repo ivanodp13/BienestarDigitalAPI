@@ -40,6 +40,50 @@ class user_controller extends Controller
             "message" => 'Contraseña cambiada y enviada. Tu nueva contraseña es: '.$newPass
         ],200);
     }
+
+    /**
+     * Edit the passwords of the user in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function passedit(Request $request, $id)
+    {
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::where('email', '=', $user_email)->first();
+        $user_id = $user->id;
+        if($user_id!=$id){
+            return response()->json([
+                "message" => 'Error, solo puedes editar tu usuario'
+            ],401);
+        }
+        if($request->currentPassword==NULL || $request->newPassword==NULL || $request->confirmPassword==NULL){
+            return response()->json([
+                "message" => 'Debes rellenar todos los campos'
+            ],401);
+        }
+
+        $inputpassword = $request->currentPassword;
+
+        if(($inputpassword == decrypt($user->password)) && ($request->newPassword == $request->confirmPassword))
+        {
+            $user->password = encrypt($request->newPassword);
+            $user->save();
+
+            return response()->json([
+                "message" => 'Contraseña cambiada correctamente'
+            ],200);
+        }
+
+
+        return response()->json([
+            "message" => 'Alguno de los campos no coincide'
+        ],401);
+    }
     
     
     
