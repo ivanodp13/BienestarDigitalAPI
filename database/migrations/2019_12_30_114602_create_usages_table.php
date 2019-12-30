@@ -17,7 +17,7 @@ class CreateUsagesTable extends Migration
             $table->increments('id');
             $table->unsignedInteger('user_id');
             $table->unsignedInteger('app_id');
-            $table->date('date');
+            $table->timestamp('date');
             $table->string('event');
             $table->string('latitude');
             $table->string('longitude');

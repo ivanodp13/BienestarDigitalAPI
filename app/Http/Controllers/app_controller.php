@@ -17,17 +17,24 @@ class app_controller extends Controller
 
             $appname = $csv[$i][0];
             $requestedapp = App::where('name', '=', $appname)->first();
-            //var_dump($appname);exit;
-            if (($requestedapp->name) != $appname)
+            //var_dump($requestedapp);exit;
+            if ($requestedapp == NULL)
             {
                 $app = new App();
                 $app->name = $appname;
                 $app->icon = $csv[$i][1];
                 $app->save();
 
-                
+            }else if (($requestedapp->name) == $appname)
+            {
+                echo 'La app '.$appname .' ya se encuentra importada'."\n";
+            }else{
+                $app = new App();
+                $app->name = $appname;
+                $app->icon = $csv[$i][1];
+                $app->save();
             }
-            echo 'La app '.$appname .' ya se encuentra importada'."\n";
+            
         }
         return response()->json([
             "message" => 'Importación realizada con éxito'
