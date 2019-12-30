@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateUsageTable extends Migration
+class CreateUsagesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,11 @@ class CreateUsageTable extends Migration
      */
     public function up()
     {
-        Schema::create('usage', function (Blueprint $table) {
+        Schema::create('usages', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('user_id');
             $table->unsignedInteger('app_id');
+            $table->date('date');
             $table->string('event');
             $table->string('latitude');
             $table->string('longitude');
@@ -31,6 +32,6 @@ class CreateUsageTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usage');
+        Schema::dropIfExists('usages');
     }
 }

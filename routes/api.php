@@ -21,12 +21,13 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::post('login', 'user_controller@login');
 Route::post('register', 'user_controller@store');
 
-Route::post('import', 'app_controller@import');
+Route::post('appsimport', 'app_controller@import');
 
 
 Route::middleware(['Checkout'])->group(function(){
     Route::apiResource('users', 'user_controller');
     Route::put('passrestore/{user}', 'user_controller@passrestore');
     Route::put('passedit/{user}', 'user_controller@passedit');
+    Route::post('usageimport', 'usage_controller@import');
 });
 

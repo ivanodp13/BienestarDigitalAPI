@@ -17,6 +17,6 @@ class Token
     }
     public function decode($token)
     {
-        return JWT::decode($token, $this->key, $this->algorithm);
+        return JWT::decode($token, $this->key, $this->algorithm); 
     }
 }

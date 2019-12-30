@@ -3,37 +3,47 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Usage;
+use App\User;
 use App\App;
+use Firebase\JWT\JWT;
+use App\Helpers\Token;
+use Illuminate\Support\Facades\DB;
 
-class app_controller extends Controller
+class usage_controller extends Controller
 {
-    public function import()
+    public function import(Request $request)
     {       
-        $csv = array_map('str_getcsv', file('/Applications/MAMP/htdocs/laravel-ivanodp/BienestarDigital/storage/app/appsData.csv'));
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::where('email', '=', $user_email)->first();
+        $user_id = $user->id;
+
+        $csv = array_map('str_getcsv', file('/Applications/MAMP/htdocs/laravel-ivanodp/BienestarDigital/storage/app/usage.csv'));
         //print_r($csv);
 
         $array_num = count($csv);
         for ($i = 1; $i < $array_num; ++$i){
+            $usage = new Usage();
+            $usage->date = $csv[$i][0];
+            $usage->event = $csv[$i][2];
+            $usage->latitude = $csv[$i][3];
+            $usage->longitude = $csv[$i][4];
+            $currentappname = $csv[$i][1];
+            $currentapp = App::where('name', '=', $currentappname)->first();
+            $usage->user_id = $user_id;
+            $usage->app_id = $currentapp->id;
 
-            $appname = $csv[$i][0];
-            $requestedapp = App::where('name', '=', $appname)->first();
-            //var_dump($appname);exit;
-            if (($requestedapp->name) != $appname)
-            {
-                $app = new App();
-                $app->name = $appname;
-                $app->icon = $csv[$i][1];
-                $app->save();
-
-                
-            }
-            echo 'La app '.$appname .' ya se encuentra importada'."\n";
+            $usage->save();
         }
+
         return response()->json([
             "message" => 'Importación realizada con éxito'
-        ],200);       
+        ],200);
     }
- 
+
     /**
      * Display a listing of the resource.
      *
