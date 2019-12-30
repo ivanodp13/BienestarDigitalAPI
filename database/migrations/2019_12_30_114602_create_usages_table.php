@@ -16,7 +16,9 @@ class CreateUsagesTable extends Migration
         Schema::create('usages', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users');
             $table->unsignedInteger('app_id');
+            $table->foreign('app_id')->references('id')->on('apps');
             $table->timestamp('date');
             $table->string('event');
             $table->string('latitude');
