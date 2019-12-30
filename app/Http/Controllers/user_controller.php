@@ -31,6 +31,8 @@ class user_controller extends Controller
         $newPass = new PasswordGenerator();
         $newPass = $newPass->newPass();
 
+        //Una vez que funcione la app, añadir el envio de la contraseña por email al campo email del user
+
         $user->password = encrypt($newPass);
         $user->save();
         

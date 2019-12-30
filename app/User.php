@@ -6,6 +6,5 @@ class User extends Model
 {
     protected $table ='users';
     protected $filliable = ['name','email','password'];
-    
-    
+
 }
