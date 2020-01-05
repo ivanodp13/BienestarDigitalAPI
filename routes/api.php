@@ -30,5 +30,6 @@ Route::middleware(['Checkout'])->group(function(){
     Route::put('passrestore/{user}', 'user_controller@passrestore');
     Route::put('passedit/{user}', 'user_controller@passedit');
     Route::post('usageimport', 'usage_controller@import');
+    Route::get('showLocations/{app_id}', 'usage_controller@showLocations');
 });
 

@@ -19,7 +19,8 @@ class CreateUsagesTable extends Migration
             $table->foreign('user_id')->references('id')->on('users');
             $table->unsignedInteger('app_id');
             $table->foreign('app_id')->references('id')->on('apps');
-            $table->timestamp('date');
+            $table->date('date');
+            $table->time('time');
             $table->string('event');
             $table->string('latitude');
             $table->string('longitude');

@@ -28,10 +28,11 @@ class usage_controller extends Controller
         for ($i = 1; $i < $array_num; ++$i){
             $usage = new Usage();
             $usage->date = $csv[$i][0];
-            $usage->event = $csv[$i][2];
-            $usage->latitude = $csv[$i][3];
-            $usage->longitude = $csv[$i][4];
-            $currentappname = $csv[$i][1];
+            $usage->time = $csv[$i][1];
+            $usage->event = $csv[$i][3];
+            $usage->latitude = $csv[$i][4];
+            $usage->longitude = $csv[$i][5];
+            $currentappname = $csv[$i][2];
             $currentapp = App::where('name', '=', $currentappname)->first();
             $usage->user_id = $user_id;
             $usage->app_id = $currentapp->id;
@@ -41,6 +42,27 @@ class usage_controller extends Controller
 
         return response()->json([
             "message" => 'Importación realizada con éxito'
+        ],200);
+    }
+
+    public function showLocations(Request $request, $id)
+    {
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::where('email', '=', $user_email)->first();
+        $user_id = $user->id;
+
+        $appsuse = DB::table('usages')
+        ->join('apps', 'apps.id', '=', 'usages.app_id')
+        ->select('latitude', 'longitude', 'apps.name')
+        ->where('app_id', '=', $id)
+        ->distinct()
+        ->get();
+        
+        return response()->json([
+            $appsuse
         ],200);
     }
 
