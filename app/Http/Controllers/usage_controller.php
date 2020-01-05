@@ -9,6 +9,7 @@ use App\App;
 use Firebase\JWT\JWT;
 use App\Helpers\Token;
 use Illuminate\Support\Facades\DB;
+use DateTime;
 
 class usage_controller extends Controller
 {
@@ -44,8 +45,8 @@ class usage_controller extends Controller
             "message" => 'Importación realizada con éxito'
         ],200);
     }
-
-    public function showLocations(Request $request, $id)
+    
+    public function showUseLocations(Request $request)
     {
         $request_token = $request->header('Authorization');
         $token = new token();
@@ -54,7 +55,26 @@ class usage_controller extends Controller
         $user = User::where('email', '=', $user_email)->first();
         $user_id = $user->id;
 
-        $appsuse = DB::table('usages')
+        $appsUsesLocation = DB::table('usages')
+        ->select('latitude', 'longitude')
+        ->distinct()
+        ->get();
+        
+        return response()->json([
+            $appsUsesLocation
+        ],200);
+    }
+
+    public function showAppLocations(Request $request, $id)
+    {
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::where('email', '=', $user_email)->first();
+        $user_id = $user->id;
+
+        $appsUsesLocation = DB::table('usages')
         ->join('apps', 'apps.id', '=', 'usages.app_id')
         ->select('latitude', 'longitude', 'apps.name')
         ->where('app_id', '=', $id)
@@ -62,8 +82,61 @@ class usage_controller extends Controller
         ->get();
         
         return response()->json([
-            $appsuse
+            $appsUsesLocation
         ],200);
+    }
+
+    public function showAppUse(Request $request, $id)
+    {
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::where('email', '=', $user_email)->first();
+        $user_id = $user->id;
+
+        
+        $today = getdate();
+        $today = "$today[year]-$today[mon]-$today[mday]";
+
+        $appsUses = DB::table('usages')
+        ->select('time', 'event')
+        ->where('app_id', '=', $id)
+        ->where('date', '=', $request->date)
+        ->get();
+        
+        $appName = DB::table('apps')
+        ->select('name')
+        ->where('id', '=', $id)
+        ->get();
+        $appName = $appName->toArray();
+        $appName = $appName[0]->name;
+
+        $appsUses = $appsUses->toArray();
+
+        $var1 = 0;
+        $var2 = 1;
+        $count = count($appsUses);
+        $count = $count/2;
+        $totaluse = 0;
+        
+
+        for ($i = 1; $i <= $count ; $i++) {
+            $date1 = new DateTime($appsUses[$var1]->time);
+            $date2 = new DateTime($appsUses[$var2]->time);
+            $diff = $date1->diff($date2);
+            $diff = $diff->s;
+            
+            $totaluse += $diff;
+
+            $var1 += 2;
+            $var2 += 2;
+        }
+
+        return response()->json([
+            "message" => 'La app '."$appName".' se ha usado hoy '."$totaluse".' segundos.'
+        ],200);
+
     }
 
     /**
