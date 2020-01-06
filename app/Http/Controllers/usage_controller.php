@@ -85,6 +85,27 @@ class usage_controller extends Controller
         ],200);
     }
 
+    public function showLastUsesLocations(Request $request)
+    {
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::where('email', '=', $user_email)->first();
+        $user_id = $user->id;
+
+        $appsLastUsesLocation = DB::table('usages')
+        ->join('apps', 'apps.id', '=', 'usages.app_id')
+        ->select('app_id', 'latitude', 'longitude', 'apps.name')
+        ->where('event', '=', "closes")
+        ->groupBy('app_id')
+        ->get();
+        
+        return response()->json([
+            $appsLastUsesLocation
+        ],200);
+    }
+
     public function showAppUse(Request $request, $id)
     {
         $request_token = $request->header('Authorization');
@@ -179,6 +200,52 @@ class usage_controller extends Controller
 
         return response()->json([
             "message" => 'La app '."$appName".' se ha usado '."$totaluse".' segundos el día seleccionado.'
+        ],200);
+
+    }
+
+    public function showAllTimeAppUse(Request $request, $id)
+    {
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::where('email', '=', $user_email)->first();
+        $user_id = $user->id;
+
+        $appsUses = DB::table('usages')
+        ->join('apps', 'apps.id', '=', 'usages.app_id')
+        ->select('date', 'event', 'apps.name')
+        ->where('app_id', '=', $id)
+        ->get();
+
+        $appName = DB::table('apps')
+        ->select('name')
+        ->where('id', '=', $id)
+        ->get();
+        $appName = $appName->toArray();
+        $appName = $appName[0]->name;
+
+        $appsUses = $appsUses->toArray();
+
+        $var1 = 0;
+        $var2 = 1;
+        $count = count($appsUses);
+        $laps = $count/2;
+        $totaluse = 0;
+
+        for ($i = 1; $i <= $laps ; $i++) {
+            $date1 = new DateTime($appsUses[$var1]->date);
+            $date2 = new DateTime($appsUses[$var2]->date);
+            $diff = $date2->getTimestamp() - $date1->getTimestamp();
+            
+            $totaluse = $totaluse + $diff;
+            $var1 += 2;
+            $var2 += 2;
+        }
+
+        return response()->json([
+            "message" => 'La app '."$appName".' se ha usado '."$totaluse".' segundos, desde que se instaló.'
         ],200);
 
     }

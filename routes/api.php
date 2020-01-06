@@ -32,5 +32,8 @@ Route::middleware(['Checkout'])->group(function(){
     Route::post('usageimport', 'usage_controller@import');
     Route::get('showAppLocations/{app_id}', 'usage_controller@showAppLocations');
     Route::get('showUseLocations', 'usage_controller@showUseLocations');
+    Route::get('showLastUsesLocations', 'usage_controller@showLastUsesLocations');
     Route::get('showAppUse/{app_id}', 'usage_controller@showAppUse');
+    Route::get('showAllTimeAppUse/{app_id}', 'usage_controller@showAllTimeAppUse');
 });
+
