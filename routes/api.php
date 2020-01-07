@@ -34,6 +34,6 @@ Route::middleware(['Checkout'])->group(function(){
     Route::get('showUseLocations', 'usage_controller@showUseLocations');
     Route::get('showLastUsesLocations', 'usage_controller@showLastUsesLocations');
     Route::get('showAppUse/{app_id}', 'usage_controller@showAppUse');
+    Route::get('showAllAppUseToday', 'usage_controller@showAllAppUseToday');
     Route::get('showAllTimeAppUse/{app_id}', 'usage_controller@showAllTimeAppUse');
 });
-

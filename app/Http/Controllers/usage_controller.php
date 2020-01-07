@@ -148,7 +148,7 @@ class usage_controller extends Controller
 
         if($appsUses[$count-1]["event"] == "opens"){
             //var_dump($laps);exit;
-            for ($i = 1; $i <= $laps-1 ; $i++) {
+            for ($operations = 1; $operations <= $laps-1 ; $operations++) {
                 $date1 = new DateTime($appsUses[$var1]["date"]);
                 $date2 = new DateTime($appsUses[$var2]["date"]);
                 $diff = $date2->getTimestamp() - $date1->getTimestamp();
@@ -176,9 +176,9 @@ class usage_controller extends Controller
             $diff = $date1->getTimestamp() - $date2->getTimestamp();
             
             $totaluse += $diff;
-            for ($i = 1; $i <= $laps-1 ; $i++) {
-                $date1 = new DateTime($appsUses[$var1]["date"]);
-                $date2 = new DateTime($appsUses[$var2]["date"]);
+            for ($operations = 1; $operations <= $laps-1 ; $operations++) {
+                $date1 = new DateTime($appsUses[($var1)+1]["date"]);
+                $date2 = new DateTime($appsUses[($var2)+1]["date"]);
                 $diff = $date2->getTimestamp() - $date1->getTimestamp();
                 
                 $totaluse = $totaluse + $diff;
@@ -186,7 +186,7 @@ class usage_controller extends Controller
                 $var2 += 2;
             }
         }else{
-            for ($i = 1; $i <= $laps ; $i++) {
+            for ($operations = 1; $operations <= $laps ; $operations++) {
                 $date1 = new DateTime($appsUses[$var1]["date"]);
                 $date2 = new DateTime($appsUses[$var2]["date"]);
                 $diff = $date2->getTimestamp() - $date1->getTimestamp();
@@ -201,6 +201,119 @@ class usage_controller extends Controller
         return response()->json([
             "message" => 'La app '."$appName".' se ha usado '."$totaluse".' segundos el día seleccionado.'
         ],200);
+
+    }
+
+    public function showAllAppUseToday(Request $request)
+    {
+        //Validación de token
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::where('email', '=', $user_email)->first();
+        $user_id = $user->id;
+
+        //Obtención de la fecha actual
+        $requestedDate = New DateTime();
+        //Expresión en días del año
+        $requestedDate = $requestedDate->format('z')+1;
+
+        //Obetención del número e ids de las apps a calcular
+        $appsIdList = DB::table('apps')
+        ->select('id')
+        ->get();
+        $appsIdList = $appsIdList->toArray();
+
+        $todayUse = array(); //creación del Array
+        $laps = count($appsIdList); //Numero de apps a contar
+        $laps = round($laps);
+        $totaluse = 0;
+
+        for ($appNumber=1; $appNumber < $laps+1 ; $appNumber++) { 
+             //Obtención de los registros del dia de hoy de la app que toca
+            $appsUses = Usage::whereRaw("DAYOFYEAR(date) = $requestedDate")
+            ->join('apps', 'apps.id', '=', 'usages.app_id')
+            ->select('date', 'event', 'app_id', 'apps.name')
+            ->where('app_id', '=', $appNumber)
+            ->get();
+            $appsUses = $appsUses->toArray();
+            //echo "App número ".$appNumber." | "."\n";
+
+            
+            $appsUsesLength = count($appsUses); //Numero de registros a calcular
+            $appsUsesLength = $appsUsesLength/2; //Numero de operaciones a realizar
+            $appsUsesLength = round($appsUsesLength);
+            $var1 = 0;
+            $var2 = 1;
+
+            $app_id = $appsUses[0]["app_id"]; // id de la app
+            $totaluse = 0;
+
+            $lastevent = DB::table('usages')
+            ->join('apps', 'apps.id', '=', 'usages.app_id')
+            ->select('date', 'event', 'app_id', 'apps.name')
+            ->where('app_id', '=', $appNumber)
+            ->latest('date')
+            ->first();
+
+            if ($lastevent->event == "opens") {
+                echo "El ".$appNumber." entra en el 1º if"."\n";
+                for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
+                    $date1 = new DateTime($appsUses[$var1]["date"]);
+                    $date2 = new DateTime($appsUses[$var2]["date"]);
+                    $diff = $date2->getTimestamp() - $date1->getTimestamp();
+                    
+                    $totaluse = $totaluse + $diff;
+                    $var1 += 2;
+                    $var2 += 2;
+                }
+                $date1 = new DateTime($appsUses[$var1]["date"]);
+                
+                $date2 = new DateTime($appsUses[$var1]["date"]);
+                $date2->setTime(00, 00, 00);
+                $date2->modify('+1 day');
+                
+                $diff = $date2->getTimestamp() - $date1->getTimestamp();
+                
+                $totaluse += $diff;
+
+            }else if($appsUses[0]["event"] == "closes") {
+                $date1 = new DateTime($appsUses[$var1]["date"]);
+                
+                $date2 = new DateTime($appsUses[$var1]["date"]);
+                $date2->setTime(00, 00, 00);
+                
+                $diff = $date1->getTimestamp() - $date2->getTimestamp();
+                
+                $totaluse += $diff;
+                for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
+                    $date1 = new DateTime($appsUses[($var1)+1]["date"]);
+                    $date2 = new DateTime($appsUses[($var2)+1]["date"]);
+                    $diff = $date2->getTimestamp() - $date1->getTimestamp();
+                    
+                    $totaluse = $totaluse + $diff;
+                    $var1 += 2; 
+                    $var2 += 2;
+                }
+            }else{
+                for ($operations = 1; $operations <= $appsUsesLength ; $operations++) {
+                    $date1 = new DateTime($appsUses[$var1]["date"]);
+                    $date2 = new DateTime($appsUses[$var2]["date"]);
+                    $diff = $date2->getTimestamp() - $date1->getTimestamp();
+                    
+                    $totaluse = $totaluse + $diff;
+                    $var1 += 2;
+                    $var2 += 2;
+                }
+            }
+            $todayUse[$app_id] = $totaluse;
+        }
+            
+        return response()->json([
+            $todayUse
+        ],200);
+
 
     }
 
