@@ -248,6 +248,235 @@ class usage_controller extends Controller
             ->get();
             $appsUses = $appsUses->toArray();
 
+            $appsUsesLength = count($appsUses); //Numero de registros a calcular
+            $appsUsesLength = $appsUsesLength/2; //Numero de operaciones a realizar
+            $appsUsesLength = round($appsUsesLength);
+            $var1 = 0;
+            $var2 = 1;
+            $app_id = $appsUses[0]["app_id"]; // id de la app
+            $totaluse = 0;
+
+            $lastevent = DB::table('usages')
+            ->join('apps', 'apps.id', '=', 'usages.app_id')
+            ->select('date', 'event', 'app_id', 'apps.name')
+            ->where('app_id', '=', $loop)
+            ->latest('date')
+            ->first();
+
+            if ($lastevent->event == "opens") {
+                for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
+                    $date1 = new DateTime($appsUses[$var1]["date"]);
+                    $date2 = new DateTime($appsUses[$var2]["date"]);
+                    $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+                    $totaluse = $totaluse + $diff;
+                    $var1 += 2;
+                    $var2 += 2;
+                }
+                $date1 = new DateTime($appsUses[$var1]["date"]);
+
+                $date2 = new DateTime($appsUses[$var1]["date"]);
+                $date2->setTime(00, 00, 00);
+                $date2->modify('+1 day');
+
+                $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+                $totaluse += $diff;
+
+            }else if($appsUses[0]["event"] == "closes") {
+                $date1 = new DateTime($appsUses[$var1]["date"]);
+
+                $date2 = new DateTime($appsUses[$var1]["date"]);
+                $date2->setTime(00, 00, 00);
+
+                $diff = $date1->getTimestamp() - $date2->getTimestamp();
+
+                $totaluse += $diff;
+                for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
+                    $date1 = new DateTime($appsUses[($var1)+1]["date"]);
+                    $date2 = new DateTime($appsUses[($var2)+1]["date"]);
+                    $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+                    $totaluse = $totaluse + $diff;
+                    $var1 += 2;
+                    $var2 += 2;
+                }
+            }else{
+                for ($operations = 1; $operations <= $appsUsesLength ; $operations++) {
+                    $date1 = new DateTime($appsUses[$var1]["date"]);
+                    $date2 = new DateTime($appsUses[$var2]["date"]);
+                    $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+                    $totaluse = $totaluse + $diff;
+                    $var1 += 2;
+                    $var2 += 2;
+                }
+            }
+            $todayUse[$app_id] = $totaluse;
+        }
+        return response()->json([
+            $todayUse
+        ],200);
+
+
+    }
+
+    public function showAllAppUseThisWeek(Request $request)
+    {
+        //Validación de token
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::where('email', '=', $user_email)->first();
+        $user_id = $user->id;
+
+        //Obtención de la fecha actual
+        $requestedDate = New DateTime();
+        //Expresión en días del año
+        $requestedDate = $requestedDate->format('W')-1;
+        //Obetención del número e ids de las apps a calcular
+        $appsIds = Usage::whereRaw("WEEK(date) = $requestedDate")
+            ->select('app_id')
+            ->groupBy('app_id')
+            ->get();
+        $appsIds = $appsIds->toArray();
+
+        $appsIdList = array();
+        for ($i=0; $i <= (count($appsIds))-1; $i++) { 
+            
+            $var = $appsIds[$i]["app_id"];
+            array_push($appsIdList , $var);
+        }
+
+        $todayUse = array(); //creación del Array
+        $laps = count($appsIdList); //Numero de apps a contar
+        $laps = round($laps);
+        $totaluse = 0;
+
+        foreach ($appsIdList as $loop) {
+            //Obtención de los registros del dia de hoy de la app que toca
+            $appsUses = Usage::whereRaw("WEEK(date) = $requestedDate")
+            ->join('apps', 'apps.id', '=', 'usages.app_id')
+            ->select('date', 'event', 'app_id', 'apps.name')
+            ->where('app_id', '=', $loop)
+            ->get();
+            $appsUses = $appsUses->toArray();
+
+            $appsUsesLength = count($appsUses); //Numero de registros a calcular
+            $appsUsesLength = $appsUsesLength/2; //Numero de operaciones a realizar
+            $appsUsesLength = round($appsUsesLength);
+            $var1 = 0;
+            $var2 = 1;
+            $app_id = $appsUses[0]["app_id"]; // id de la app
+            $totaluse = 0;
+
+            $lastevent = DB::table('usages')
+            ->join('apps', 'apps.id', '=', 'usages.app_id')
+            ->select('date', 'event', 'app_id', 'apps.name')
+            ->where('app_id', '=', $loop)
+            ->latest('date')
+            ->first();
+
+            if ($lastevent->event == "opens") {
+                for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
+                    $date1 = new DateTime($appsUses[$var1]["date"]);
+                    $date2 = new DateTime($appsUses[$var2]["date"]);
+                    $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+                    $totaluse = $totaluse + $diff;
+                    $var1 += 2;
+                    $var2 += 2;
+                }
+                $date1 = new DateTime($appsUses[$var1]["date"]);
+
+                $date2 = new DateTime($appsUses[$var1]["date"]);
+                $date2->setTime(00, 00, 00);
+                $date2->modify('+1 day');
+
+                $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+                $totaluse += $diff;
+
+            }else if($appsUses[0]["event"] == "closes") {
+                $date1 = new DateTime($appsUses[$var1]["date"]);
+
+                $date2 = new DateTime($appsUses[$var1]["date"]);
+                $date2->setTime(00, 00, 00);
+
+                $diff = $date1->getTimestamp() - $date2->getTimestamp();
+
+                $totaluse += $diff;
+                for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
+                    $date1 = new DateTime($appsUses[($var1)+1]["date"]);
+                    $date2 = new DateTime($appsUses[($var2)+1]["date"]);
+                    $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+                    $totaluse = $totaluse + $diff;
+                    $var1 += 2;
+                    $var2 += 2;
+                }
+            }else{
+                for ($operations = 1; $operations <= $appsUsesLength ; $operations++) {
+                    $date1 = new DateTime($appsUses[$var1]["date"]);
+                    $date2 = new DateTime($appsUses[$var2]["date"]);
+                    $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+                    $totaluse = $totaluse + $diff;
+                    $var1 += 2;
+                    $var2 += 2;
+                }
+            }
+            $todayUse[$app_id] = $totaluse;
+        }
+        return response()->json([
+            $todayUse
+        ],200);
+
+
+    }
+
+    public function showAllAppUseThisMonth(Request $request)
+    {
+        //Validación de token
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::where('email', '=', $user_email)->first();
+        $user_id = $user->id;
+
+        //Obtención de la fecha actual
+        $requestedDate = New DateTime('2020-01-09');
+        //Expresión en días del año
+        $requestedDate = $requestedDate->format('m');
+        //Obetención del número e ids de las apps a calcular
+        $appsIds = Usage::whereRaw("MONTH(date) = $requestedDate")
+            ->select('app_id')
+            ->groupBy('app_id')
+            ->get();
+        $appsIds = $appsIds->toArray();
+
+        $appsIdList = array();
+        for ($i=0; $i <= (count($appsIds))-1; $i++) { 
+            
+            $var = $appsIds[$i]["app_id"];
+            array_push($appsIdList , $var);
+        }
+
+        $todayUse = array(); //creación del Array
+        $laps = count($appsIdList); //Numero de apps a contar
+        $laps = round($laps);
+        $totaluse = 0;
+
+        foreach ($appsIdList as $loop) {
+            //Obtención de los registros del dia de hoy de la app que toca
+            $appsUses = Usage::whereRaw("MONTH(date) = $requestedDate")
+            ->join('apps', 'apps.id', '=', 'usages.app_id')
+            ->select('date', 'event', 'app_id', 'apps.name')
+            ->where('app_id', '=', $loop)
+            ->get();
+            $appsUses = $appsUses->toArray();
 
             $appsUsesLength = count($appsUses); //Numero de registros a calcular
             $appsUsesLength = $appsUsesLength/2; //Numero de operaciones a realizar
