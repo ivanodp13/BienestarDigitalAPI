@@ -14,7 +14,7 @@ use DateTime;
 class usage_controller extends Controller
 {
     public function import(Request $request)
-    {       
+    {
         $request_token = $request->header('Authorization');
         $token = new token();
         $decoded_token = $token->decode($request_token);
@@ -44,7 +44,7 @@ class usage_controller extends Controller
             "message" => 'Importación realizada con éxito'
         ],200);
     }
-    
+
     public function showUseLocations(Request $request)
     {
         $request_token = $request->header('Authorization');
@@ -58,7 +58,7 @@ class usage_controller extends Controller
         ->select('latitude', 'longitude')
         ->distinct()
         ->get();
-        
+
         return response()->json([
             $appsUsesLocation
         ],200);
@@ -79,7 +79,7 @@ class usage_controller extends Controller
         ->where('app_id', '=', $id)
         ->distinct()
         ->get();
-        
+
         return response()->json([
             $appsUsesLocation
         ],200);
@@ -100,7 +100,7 @@ class usage_controller extends Controller
         ->where('event', '=', "closes")
         ->groupBy('app_id')
         ->get();
-        
+
         return response()->json([
             $appsLastUsesLocation
         ],200);
@@ -123,12 +123,13 @@ class usage_controller extends Controller
         ->where('app_id', '=', $id)
         ->get();
 
-        
+
         $appName = DB::table('apps')
         ->select('name')
         ->where('id', '=', $id)
         ->get();
         $appName = $appName->toArray();
+        //var_dump($appName);exit;
         $appName = $appName[0]->name;
 
         $appsUses = $appsUses->toArray();
@@ -139,7 +140,7 @@ class usage_controller extends Controller
         $laps = $count/2;
         $laps = round($laps);
         $totaluse = 0;
-        
+
         if(empty($appsUses) == true){
             return response()->json([
                 "message" => 'La app '."$appName".' no se ha usado el día seleccionado'
@@ -152,35 +153,35 @@ class usage_controller extends Controller
                 $date1 = new DateTime($appsUses[$var1]["date"]);
                 $date2 = new DateTime($appsUses[$var2]["date"]);
                 $diff = $date2->getTimestamp() - $date1->getTimestamp();
-                
+
                 $totaluse = $totaluse + $diff;
                 $var1 += 2;
                 $var2 += 2;
             }
             $date1 = new DateTime($appsUses[$var1]["date"]);
-            
+
             $date2 = new DateTime($appsUses[$var1]["date"]);
             $date2->setTime(00, 00, 00);
             $date2->modify('+1 day');
-            
+
             $diff = $date2->getTimestamp() - $date1->getTimestamp();
-            
+
             $totaluse += $diff;
 
         }else if ($appsUses[0]["event"] == "closes"){
             $date1 = new DateTime($appsUses[$var1]["date"]);
-            
+
             $date2 = new DateTime($appsUses[$var1]["date"]);
             $date2->setTime(00, 00, 00);
-            
+
             $diff = $date1->getTimestamp() - $date2->getTimestamp();
-            
+
             $totaluse += $diff;
             for ($operations = 1; $operations <= $laps-1 ; $operations++) {
                 $date1 = new DateTime($appsUses[($var1)+1]["date"]);
                 $date2 = new DateTime($appsUses[($var2)+1]["date"]);
                 $diff = $date2->getTimestamp() - $date1->getTimestamp();
-                
+
                 $totaluse = $totaluse + $diff;
                 $var1 += 2;
                 $var2 += 2;
@@ -190,9 +191,9 @@ class usage_controller extends Controller
                 $date1 = new DateTime($appsUses[$var1]["date"]);
                 $date2 = new DateTime($appsUses[$var2]["date"]);
                 $diff = $date2->getTimestamp() - $date1->getTimestamp();
-                
+
                 $totaluse = $totaluse + $diff;
-    
+
                 $var1 += 2;
                 $var2 += 2;
             }
@@ -220,80 +221,85 @@ class usage_controller extends Controller
         $requestedDate = $requestedDate->format('z')+1;
 
         //Obetención del número e ids de las apps a calcular
-        $appsIdList = DB::table('apps')
-        ->select('id')
-        ->get();
-        $appsIdList = $appsIdList->toArray();
+        $appsIds = Usage::whereRaw("DAYOFYEAR(date) = $requestedDate")
+            ->select('app_id')
+            ->groupBy('app_id')
+            ->get();
+        $appsIds = $appsIds->toArray();
+
+        $appsIdList = array();
+        for ($i=0; $i <= (count($appsIds))-1; $i++) { 
+            
+            $var = $appsIds[$i]["app_id"];
+            array_push($appsIdList , $var);
+        }
 
         $todayUse = array(); //creación del Array
         $laps = count($appsIdList); //Numero de apps a contar
         $laps = round($laps);
         $totaluse = 0;
 
-        for ($appNumber=1; $appNumber < $laps+1 ; $appNumber++) { 
-             //Obtención de los registros del dia de hoy de la app que toca
+        foreach ($appsIdList as $loop) {
+            //Obtención de los registros del dia de hoy de la app que toca
             $appsUses = Usage::whereRaw("DAYOFYEAR(date) = $requestedDate")
             ->join('apps', 'apps.id', '=', 'usages.app_id')
             ->select('date', 'event', 'app_id', 'apps.name')
-            ->where('app_id', '=', $appNumber)
+            ->where('app_id', '=', $loop)
             ->get();
             $appsUses = $appsUses->toArray();
-            //echo "App número ".$appNumber." | "."\n";
 
-            
+
             $appsUsesLength = count($appsUses); //Numero de registros a calcular
             $appsUsesLength = $appsUsesLength/2; //Numero de operaciones a realizar
             $appsUsesLength = round($appsUsesLength);
             $var1 = 0;
             $var2 = 1;
-
             $app_id = $appsUses[0]["app_id"]; // id de la app
             $totaluse = 0;
 
             $lastevent = DB::table('usages')
             ->join('apps', 'apps.id', '=', 'usages.app_id')
             ->select('date', 'event', 'app_id', 'apps.name')
-            ->where('app_id', '=', $appNumber)
+            ->where('app_id', '=', $loop)
             ->latest('date')
             ->first();
 
             if ($lastevent->event == "opens") {
-                echo "El ".$appNumber." entra en el 1º if"."\n";
                 for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
                     $date1 = new DateTime($appsUses[$var1]["date"]);
                     $date2 = new DateTime($appsUses[$var2]["date"]);
                     $diff = $date2->getTimestamp() - $date1->getTimestamp();
-                    
+
                     $totaluse = $totaluse + $diff;
                     $var1 += 2;
                     $var2 += 2;
                 }
                 $date1 = new DateTime($appsUses[$var1]["date"]);
-                
+
                 $date2 = new DateTime($appsUses[$var1]["date"]);
                 $date2->setTime(00, 00, 00);
                 $date2->modify('+1 day');
-                
+
                 $diff = $date2->getTimestamp() - $date1->getTimestamp();
-                
+
                 $totaluse += $diff;
 
             }else if($appsUses[0]["event"] == "closes") {
                 $date1 = new DateTime($appsUses[$var1]["date"]);
-                
+
                 $date2 = new DateTime($appsUses[$var1]["date"]);
                 $date2->setTime(00, 00, 00);
-                
+
                 $diff = $date1->getTimestamp() - $date2->getTimestamp();
-                
+
                 $totaluse += $diff;
                 for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
                     $date1 = new DateTime($appsUses[($var1)+1]["date"]);
                     $date2 = new DateTime($appsUses[($var2)+1]["date"]);
                     $diff = $date2->getTimestamp() - $date1->getTimestamp();
-                    
+
                     $totaluse = $totaluse + $diff;
-                    $var1 += 2; 
+                    $var1 += 2;
                     $var2 += 2;
                 }
             }else{
@@ -301,7 +307,7 @@ class usage_controller extends Controller
                     $date1 = new DateTime($appsUses[$var1]["date"]);
                     $date2 = new DateTime($appsUses[$var2]["date"]);
                     $diff = $date2->getTimestamp() - $date1->getTimestamp();
-                    
+
                     $totaluse = $totaluse + $diff;
                     $var1 += 2;
                     $var2 += 2;
@@ -309,7 +315,6 @@ class usage_controller extends Controller
             }
             $todayUse[$app_id] = $totaluse;
         }
-            
         return response()->json([
             $todayUse
         ],200);
@@ -351,7 +356,7 @@ class usage_controller extends Controller
             $date1 = new DateTime($appsUses[$var1]->date);
             $date2 = new DateTime($appsUses[$var2]->date);
             $diff = $date2->getTimestamp() - $date1->getTimestamp();
-            
+
             $totaluse = $totaluse + $diff;
             $var1 += 2;
             $var2 += 2;
