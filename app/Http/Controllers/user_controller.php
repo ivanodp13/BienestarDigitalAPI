@@ -6,6 +6,8 @@ use Firebase\JWT\JWT;
 use App\Helpers\Token;
 use App\Helpers\passwordGenerator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+
 class user_controller extends Controller
 {
     /**
@@ -28,16 +30,30 @@ class user_controller extends Controller
                 "message" => 'Error, solo puedes editar tu usuario'
             ],401);
         }
+
+        if($user_email != $request->email){
+            return response()->json([
+                "message" => 'Error, introduce bien el email'
+            ],401);
+        }
+
         $newPass = new PasswordGenerator();
         $newPass = $newPass->newPass();
 
-        //Una vez que funcione la app, añadir el envio de la contraseña por email al campo email del user
-
         $user->password = encrypt($newPass);
         $user->save();
-        
+
+        $data = array("newPass" => $newPass);
+        $subject = "Tu nueva contraseña";
+        $for = $request->email;
+        Mail::send('emails.forgot', $data, function($msj) use($subject,$for){
+            $msj->from("bienestappPassRecovery@outlook.com","BienestApp Password Recovery");
+            $msj->subject($subject);
+            $msj->to($for);
+        });
+
         return response()->json([
-            "message" => 'Contraseña cambiada y enviada. Tu nueva contraseña es: '.$newPass
+            "message" => 'Contraseña cambiada y enviada.'
         ],200);
     }
 
@@ -84,9 +100,9 @@ class user_controller extends Controller
             "message" => 'Alguno de los campos no coincide'
         ],401);
     }
-    
-    
-    
+
+
+
     public function login(Request $request)
     {
         $data = ['email' => $request->email];

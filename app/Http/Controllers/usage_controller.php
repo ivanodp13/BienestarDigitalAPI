@@ -10,6 +10,7 @@ use Firebase\JWT\JWT;
 use App\Helpers\Token;
 use Illuminate\Support\Facades\DB;
 use DateTime;
+use stdClass;
 
 class usage_controller extends Controller
 {
@@ -150,6 +151,7 @@ class usage_controller extends Controller
         if($appsUses[$count-1]["event"] == "opens"){
             //var_dump($laps);exit;
             for ($operations = 1; $operations <= $laps-1 ; $operations++) {
+                //$totaluse = dateDiff();
                 $date1 = new DateTime($appsUses[$var1]["date"]);
                 $date2 = new DateTime($appsUses[$var2]["date"]);
                 $diff = $date2->getTimestamp() - $date1->getTimestamp();
@@ -228,8 +230,8 @@ class usage_controller extends Controller
         $appsIds = $appsIds->toArray();
 
         $appsIdList = array();
-        for ($i=0; $i <= (count($appsIds))-1; $i++) { 
-            
+        for ($i=0; $i <= (count($appsIds))-1; $i++) {
+
             $var = $appsIds[$i]["app_id"];
             array_push($appsIdList , $var);
         }
@@ -238,8 +240,10 @@ class usage_controller extends Controller
         $laps = count($appsIdList); //Numero de apps a contar
         $laps = round($laps);
         $totaluse = 0;
+        $appsUseList = array();
 
         foreach ($appsIdList as $loop) {
+            $app = new stdClass();
             //Obtención de los registros del dia de hoy de la app que toca
             $appsUses = Usage::whereRaw("DAYOFYEAR(date) = $requestedDate")
             ->join('apps', 'apps.id', '=', 'usages.app_id')
@@ -256,12 +260,18 @@ class usage_controller extends Controller
             $app_id = $appsUses[0]["app_id"]; // id de la app
             $totaluse = 0;
 
+
             $lastevent = DB::table('usages')
             ->join('apps', 'apps.id', '=', 'usages.app_id')
             ->select('date', 'event', 'app_id', 'apps.name')
             ->where('app_id', '=', $loop)
             ->latest('date')
             ->first();
+
+            $appsName = DB::table('apps')
+            ->select('name', 'id','icon')
+            ->get();
+            $appsName = $appsName->toArray();
 
             if ($lastevent->event == "opens") {
                 for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
@@ -312,11 +322,17 @@ class usage_controller extends Controller
                     $var2 += 2;
                 }
             }
-            $todayUse[$app_id] = $totaluse;
+            $app->id = ($appsName[($app_id)-1]->id);
+            $app->name = ($appsName[($app_id)-1]->name);
+            $app->icon = ($appsName[($app_id)-1]->icon);
+            $app->use = $totaluse;
+
+            $todayUse = $app;
+            array_push($appsUseList, $todayUse);
         }
-        return response()->json([
-            $todayUse
-        ],200);
+        return response()->json(
+            $appsUseList
+        ,200);
 
 
     }
@@ -343,8 +359,8 @@ class usage_controller extends Controller
         $appsIds = $appsIds->toArray();
 
         $appsIdList = array();
-        for ($i=0; $i <= (count($appsIds))-1; $i++) { 
-            
+        for ($i=0; $i <= (count($appsIds))-1; $i++) {
+
             $var = $appsIds[$i]["app_id"];
             array_push($appsIdList , $var);
         }
@@ -353,8 +369,11 @@ class usage_controller extends Controller
         $laps = count($appsIdList); //Numero de apps a contar
         $laps = round($laps);
         $totaluse = 0;
+        $appsUseList = array();
+
 
         foreach ($appsIdList as $loop) {
+            $app = new stdClass();
             //Obtención de los registros del dia de hoy de la app que toca
             $appsUses = Usage::whereRaw("WEEK(date) = $requestedDate")
             ->join('apps', 'apps.id', '=', 'usages.app_id')
@@ -377,6 +396,11 @@ class usage_controller extends Controller
             ->where('app_id', '=', $loop)
             ->latest('date')
             ->first();
+
+            $appsName = DB::table('apps')
+            ->select('name', 'id','icon')
+            ->get();
+            $appsName = $appsName->toArray();
 
             if ($lastevent->event == "opens") {
                 for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
@@ -427,11 +451,17 @@ class usage_controller extends Controller
                     $var2 += 2;
                 }
             }
-            $todayUse[$app_id] = $totaluse;
+            $app->id = ($appsName[($app_id)-1]->id);
+            $app->name = ($appsName[($app_id)-1]->name);
+            $app->icon = ($appsName[($app_id)-1]->icon);
+            $app->use = $totaluse;
+
+            $todayUse = $app;
+            array_push($appsUseList, $todayUse);
         }
-        return response()->json([
-            $todayUse
-        ],200);
+        return response()->json(
+            $appsUseList
+        ,200);
 
 
     }
@@ -458,8 +488,8 @@ class usage_controller extends Controller
         $appsIds = $appsIds->toArray();
 
         $appsIdList = array();
-        for ($i=0; $i <= (count($appsIds))-1; $i++) { 
-            
+        for ($i=0; $i <= (count($appsIds))-1; $i++) {
+
             $var = $appsIds[$i]["app_id"];
             array_push($appsIdList , $var);
         }
@@ -468,8 +498,10 @@ class usage_controller extends Controller
         $laps = count($appsIdList); //Numero de apps a contar
         $laps = round($laps);
         $totaluse = 0;
+        $appsUseList = array();
 
         foreach ($appsIdList as $loop) {
+            $app = new stdClass();
             //Obtención de los registros del dia de hoy de la app que toca
             $appsUses = Usage::whereRaw("MONTH(date) = $requestedDate")
             ->join('apps', 'apps.id', '=', 'usages.app_id')
@@ -492,6 +524,12 @@ class usage_controller extends Controller
             ->where('app_id', '=', $loop)
             ->latest('date')
             ->first();
+
+            $appsName = DB::table('apps')
+            ->select('name', 'id','icon')
+            ->get();
+            $appsName = $appsName->toArray();
+
 
             if ($lastevent->event == "opens") {
                 for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
@@ -542,11 +580,17 @@ class usage_controller extends Controller
                     $var2 += 2;
                 }
             }
-            $todayUse[$app_id] = $totaluse;
+            $app->id = ($appsName[($app_id)-1]->id);
+            $app->name = ($appsName[($app_id)-1]->name);
+            $app->icon = ($appsName[($app_id)-1]->icon);
+            $app->use = $totaluse;
+
+            $todayUse = $app;
+            array_push($appsUseList, $todayUse);
         }
-        return response()->json([
-            $todayUse
-        ],200);
+        return response()->json(
+            $appsUseList
+        ,200);
 
 
     }
@@ -595,81 +639,5 @@ class usage_controller extends Controller
             "message" => 'La app '."$appName".' se ha usado '."$totaluse".' segundos, desde que se instaló.'
         ],200);
 
-    }
-
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
     }
 }
