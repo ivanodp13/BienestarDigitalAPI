@@ -10,6 +10,21 @@ use Illuminate\Support\Facades\Mail;
 
 class user_controller extends Controller
 {
+    public function showUserInfo(Request $request)
+    {
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::select('id', 'name', 'email')->where('email', '=', $user_email)->first();
+
+        return response()->json(
+            $user
+        ,200);
+
+    }
+
+
     /**
      * Restore the passwords of the user in storage.
      *
@@ -17,23 +32,13 @@ class user_controller extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function passrestore(Request $request, $id)
+    public function passrestore(Request $request)
     {
-        $request_token = $request->header('Authorization');
-        $token = new token();
-        $decoded_token = $token->decode($request_token);
-        $user_email = $decoded_token->email;
-        $user = User::where('email', '=', $user_email)->first();
-        $user_id = $user->id;
-        if($user_id!=$id){
+        $requested_email = ['email' => $request->email];
+        $user = User::where($requested_email)->first();
+        if($user==NULL){
             return response()->json([
-                "message" => 'Error, solo puedes editar tu usuario'
-            ],401);
-        }
-
-        if($user_email != $request->email){
-            return response()->json([
-                "message" => 'Error, introduce bien el email'
+                "message" => 'Ese email no existe'
             ],401);
         }
 
@@ -64,7 +69,7 @@ class user_controller extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function passedit(Request $request, $id)
+    public function passedit(Request $request)
     {
         $request_token = $request->header('Authorization');
         $token = new token();
@@ -72,11 +77,7 @@ class user_controller extends Controller
         $user_email = $decoded_token->email;
         $user = User::where('email', '=', $user_email)->first();
         $user_id = $user->id;
-        if($user_id!=$id){
-            return response()->json([
-                "message" => 'Error, solo puedes editar tu usuario'
-            ],401);
-        }
+
         if($request->currentPassword==NULL || $request->newPassword==NULL || $request->confirmPassword==NULL){
             return response()->json([
                 "message" => 'Debes rellenar todos los campos'
@@ -109,7 +110,7 @@ class user_controller extends Controller
         $user = User::where($data)->first();
         if($user==NULL){
             return response()->json([
-                "message" => 'Incorrect email or password'
+                "message" => 'Email o contraseña incorrecta'
             ],401);
         }
         if(decrypt($user->password) == $request->password)
@@ -121,7 +122,7 @@ class user_controller extends Controller
             ],200);
         }
         return response()->json([
-            "message" => 'Incorrect email or password'
+            "message" => 'Email o contraseña incorrecta'
         ],401);
     }
     /**
@@ -157,9 +158,18 @@ class user_controller extends Controller
         $email = User::where($requested_email)->first();
         if($email!=NULL){
             return response()->json([
-                "message" => 'Ya existe un usuario con ese email'
+                "message" => 'Ese email ya existe'
             ],401);
         }
+
+        $requested_name = ['name' => $request->name];
+        $name = User::where($requested_name)->first();
+        if($name!=NULL){
+            return response()->json([
+                "message" => 'Ese usuario ya existe'
+            ],401);
+        }
+
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
@@ -180,7 +190,7 @@ class user_controller extends Controller
      */
     public function show(Request $request)
     {
-        //
+
     }
     /**
      * Show the form for editing the specified resource.

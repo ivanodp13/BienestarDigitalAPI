@@ -236,11 +236,37 @@ class usage_controller extends Controller
             array_push($appsIdList , $var);
         }
 
+        $appsIds = DB::table('apps')
+            ->select('id')
+            ->get();
+            $appsIds = $appsIds->toArray();
+
         $todayUse = array(); //creación del Array
         $laps = count($appsIdList); //Numero de apps a contar
         $laps = round($laps);
         $totaluse = 0;
         $appsUseList = array();
+        $nonUsedApps = array();
+        
+
+        for ($i=1; $i < count($appsIds)+1; $i++) { 
+            $UsedApps = Usage::whereRaw("DAYOFYEAR(date) = $requestedDate")
+            ->join('apps', 'apps.id', '=', 'usages.app_id')
+            ->select('date', 'event', 'app_id', 'apps.name')
+            ->where('app_id', '=', $i)
+            ->groupBy('app_id')
+            ->get();
+            $UsedApps = $UsedApps->toArray();
+
+            if(empty($UsedApps)==TRUE){
+                array_push($nonUsedApps, $i);
+            }
+        }
+
+        $appsName = DB::table('apps')
+        ->select('name', 'id','icon')
+        ->get();
+        $appsName = $appsName->toArray();
 
         foreach ($appsIdList as $loop) {
             $app = new stdClass();
@@ -268,10 +294,10 @@ class usage_controller extends Controller
             ->latest('date')
             ->first();
 
-            $appsName = DB::table('apps')
+            /* $appsName = DB::table('apps')
             ->select('name', 'id','icon')
             ->get();
-            $appsName = $appsName->toArray();
+            $appsName = $appsName->toArray(); */
 
             if ($lastevent->event == "opens") {
                 for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
@@ -330,6 +356,18 @@ class usage_controller extends Controller
             $todayUse = $app;
             array_push($appsUseList, $todayUse);
         }
+        foreach ($nonUsedApps as $loop) {
+            $app = new stdClass();
+
+            $app->id = ($appsName[$loop-1]->id);
+            $app->name = ($appsName[$loop-1]->name);
+            $app->icon = ($appsName[$loop-1]->icon);
+            $app->use = 0;
+
+            $todayUse = $app;
+            array_push($appsUseList, $todayUse);
+        }
+
         return response()->json(
             $appsUseList
         ,200);
@@ -365,11 +403,37 @@ class usage_controller extends Controller
             array_push($appsIdList , $var);
         }
 
+        $appsIds = DB::table('apps')
+        ->select('id')
+        ->get();
+        $appsIds = $appsIds->toArray();
+
         $todayUse = array(); //creación del Array
         $laps = count($appsIdList); //Numero de apps a contar
         $laps = round($laps);
         $totaluse = 0;
         $appsUseList = array();
+
+        $nonUsedApps = array();
+
+        for ($i=1; $i < count($appsIds)+1; $i++) { 
+            $UsedApps = Usage::whereRaw("WEEK(date) = $requestedDate")
+            ->join('apps', 'apps.id', '=', 'usages.app_id')
+            ->select('date', 'event', 'app_id', 'apps.name')
+            ->where('app_id', '=', $i)
+            ->groupBy('app_id')
+            ->get();
+            $UsedApps = $UsedApps->toArray();
+
+            if(empty($UsedApps)==TRUE){
+                array_push($nonUsedApps, $i);
+            }
+        }
+
+        $appsName = DB::table('apps')
+        ->select('name', 'id','icon')
+        ->get();
+        $appsName = $appsName->toArray();
 
 
         foreach ($appsIdList as $loop) {
@@ -397,10 +461,10 @@ class usage_controller extends Controller
             ->latest('date')
             ->first();
 
-            $appsName = DB::table('apps')
+            /* $appsName = DB::table('apps')
             ->select('name', 'id','icon')
             ->get();
-            $appsName = $appsName->toArray();
+            $appsName = $appsName->toArray(); */
 
             if ($lastevent->event == "opens") {
                 for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
@@ -459,6 +523,19 @@ class usage_controller extends Controller
             $todayUse = $app;
             array_push($appsUseList, $todayUse);
         }
+
+        foreach ($nonUsedApps as $loop) {
+            $app = new stdClass();
+
+            $app->id = ($appsName[$loop-1]->id);
+            $app->name = ($appsName[$loop-1]->name);
+            $app->icon = ($appsName[$loop-1]->icon);
+            $app->use = 0;
+
+            $todayUse = $app;
+            array_push($appsUseList, $todayUse);
+        }
+
         return response()->json(
             $appsUseList
         ,200);
@@ -494,11 +571,36 @@ class usage_controller extends Controller
             array_push($appsIdList , $var);
         }
 
+        $appsIds = DB::table('apps')
+            ->select('id')
+            ->get();
+            $appsIds = $appsIds->toArray();
+
         $todayUse = array(); //creación del Array
         $laps = count($appsIdList); //Numero de apps a contar
         $laps = round($laps);
         $totaluse = 0;
         $appsUseList = array();
+        $nonUsedApps = array();
+
+        for ($i=1; $i < count($appsIds)+1; $i++) { 
+            $UsedApps = Usage::whereRaw("MONTH(date) = $requestedDate")
+            ->join('apps', 'apps.id', '=', 'usages.app_id')
+            ->select('date', 'event', 'app_id', 'apps.name')
+            ->where('app_id', '=', $i)
+            ->groupBy('app_id')
+            ->get();
+            $UsedApps = $UsedApps->toArray();
+
+            if(empty($UsedApps)==TRUE){
+                array_push($nonUsedApps, $i);
+            }
+        }
+        
+        $appsName = DB::table('apps')
+        ->select('name', 'id','icon')
+        ->get();
+        $appsName = $appsName->toArray();
 
         foreach ($appsIdList as $loop) {
             $app = new stdClass();
@@ -525,10 +627,10 @@ class usage_controller extends Controller
             ->latest('date')
             ->first();
 
-            $appsName = DB::table('apps')
+            /* $appsName = DB::table('apps')
             ->select('name', 'id','icon')
             ->get();
-            $appsName = $appsName->toArray();
+            $appsName = $appsName->toArray(); */
 
 
             if ($lastevent->event == "opens") {
@@ -588,11 +690,21 @@ class usage_controller extends Controller
             $todayUse = $app;
             array_push($appsUseList, $todayUse);
         }
+        foreach ($nonUsedApps as $loop) {
+            $app = new stdClass();
+
+            $app->id = ($appsName[$loop-1]->id);
+            $app->name = ($appsName[$loop-1]->name);
+            $app->icon = ($appsName[$loop-1]->icon);
+            $app->use = 0;
+
+            $todayUse = $app;
+            array_push($appsUseList, $todayUse);
+        }
+
         return response()->json(
             $appsUseList
         ,200);
-
-
     }
 
     public function showAllTimeAppUse(Request $request, $id)
