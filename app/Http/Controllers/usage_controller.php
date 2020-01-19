@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Usage;
 use App\User;
 use App\App;
+use App\Helpers\hoursConverter;
 use Firebase\JWT\JWT;
 use App\Helpers\Token;
 use Illuminate\Support\Facades\DB;
@@ -60,9 +61,9 @@ class usage_controller extends Controller
         ->distinct()
         ->get();
 
-        return response()->json([
+        return response()->json(
             $appsUsesLocation
-        ],200);
+        ,200);
     }
 
     public function showAppLocations(Request $request, $id)
@@ -247,9 +248,9 @@ class usage_controller extends Controller
         $totaluse = 0;
         $appsUseList = array();
         $nonUsedApps = array();
-        
 
-        for ($i=1; $i < count($appsIds)+1; $i++) { 
+
+        for ($i=1; $i < count($appsIds)+1; $i++) {
             $UsedApps = Usage::whereRaw("DAYOFYEAR(date) = $requestedDate")
             ->join('apps', 'apps.id', '=', 'usages.app_id')
             ->select('date', 'event', 'app_id', 'apps.name')
@@ -351,7 +352,10 @@ class usage_controller extends Controller
             $app->id = ($appsName[($app_id)-1]->id);
             $app->name = ($appsName[($app_id)-1]->name);
             $app->icon = ($appsName[($app_id)-1]->icon);
-            $app->use = $totaluse;
+
+            $transformation = new hoursConverter();
+            $transformation = $transformation->transform($totaluse);
+            $app->use = $transformation;
 
             $todayUse = $app;
             array_push($appsUseList, $todayUse);
@@ -362,7 +366,7 @@ class usage_controller extends Controller
             $app->id = ($appsName[$loop-1]->id);
             $app->name = ($appsName[$loop-1]->name);
             $app->icon = ($appsName[$loop-1]->icon);
-            $app->use = 0;
+            $app->use = "Sin usar hoy";
 
             $todayUse = $app;
             array_push($appsUseList, $todayUse);
@@ -416,7 +420,7 @@ class usage_controller extends Controller
 
         $nonUsedApps = array();
 
-        for ($i=1; $i < count($appsIds)+1; $i++) { 
+        for ($i=1; $i < count($appsIds)+1; $i++) {
             $UsedApps = Usage::whereRaw("WEEK(date) = $requestedDate")
             ->join('apps', 'apps.id', '=', 'usages.app_id')
             ->select('date', 'event', 'app_id', 'apps.name')
@@ -518,7 +522,10 @@ class usage_controller extends Controller
             $app->id = ($appsName[($app_id)-1]->id);
             $app->name = ($appsName[($app_id)-1]->name);
             $app->icon = ($appsName[($app_id)-1]->icon);
-            $app->use = $totaluse;
+
+            $transformation = new hoursConverter();
+            $transformation = $transformation->transform($totaluse);
+            $app->use = $transformation;
 
             $todayUse = $app;
             array_push($appsUseList, $todayUse);
@@ -530,7 +537,7 @@ class usage_controller extends Controller
             $app->id = ($appsName[$loop-1]->id);
             $app->name = ($appsName[$loop-1]->name);
             $app->icon = ($appsName[$loop-1]->icon);
-            $app->use = 0;
+            $app->use = "Sin usar hoy";
 
             $todayUse = $app;
             array_push($appsUseList, $todayUse);
@@ -583,7 +590,7 @@ class usage_controller extends Controller
         $appsUseList = array();
         $nonUsedApps = array();
 
-        for ($i=1; $i < count($appsIds)+1; $i++) { 
+        for ($i=1; $i < count($appsIds)+1; $i++) {
             $UsedApps = Usage::whereRaw("MONTH(date) = $requestedDate")
             ->join('apps', 'apps.id', '=', 'usages.app_id')
             ->select('date', 'event', 'app_id', 'apps.name')
@@ -596,7 +603,7 @@ class usage_controller extends Controller
                 array_push($nonUsedApps, $i);
             }
         }
-        
+
         $appsName = DB::table('apps')
         ->select('name', 'id','icon')
         ->get();
@@ -685,7 +692,10 @@ class usage_controller extends Controller
             $app->id = ($appsName[($app_id)-1]->id);
             $app->name = ($appsName[($app_id)-1]->name);
             $app->icon = ($appsName[($app_id)-1]->icon);
-            $app->use = $totaluse;
+
+            $transformation = new hoursConverter();
+            $transformation = $transformation->transform($totaluse);
+            $app->use = $transformation;
 
             $todayUse = $app;
             array_push($appsUseList, $todayUse);
@@ -696,7 +706,7 @@ class usage_controller extends Controller
             $app->id = ($appsName[$loop-1]->id);
             $app->name = ($appsName[$loop-1]->name);
             $app->icon = ($appsName[$loop-1]->icon);
-            $app->use = 0;
+            $app->use = "Sin usar hoy";
 
             $todayUse = $app;
             array_push($appsUseList, $todayUse);
@@ -705,6 +715,208 @@ class usage_controller extends Controller
         return response()->json(
             $appsUseList
         ,200);
+    }
+
+    public function appUseDetails(Request $request, $appName)
+    {
+        $request_token = $request->header('Authorization');
+        $token = new token();
+        $decoded_token = $token->decode($request_token);
+        $user_email = $decoded_token->email;
+        $user = User::where('email', '=', $user_email)->first();
+
+        $requestedAppId = DB::table('apps')
+        ->select('id')
+        ->where('name', '=', $appName)
+        ->get();
+        $requestedAppId = $requestedAppId->toArray();
+
+        $requestedInfo = DB::table('apps')
+        ->select('id', 'name', 'icon')
+        ->where('id', '=', $requestedAppId[0]->id)
+        ->get();
+        $requestedInfo = $requestedInfo->toArray();
+
+        $app = new stdClass();
+        $requestedAppDetails = array();
+
+        $app->id = (strval($requestedInfo[0]->id));
+        $app->name = ($requestedInfo[0]->name);
+        $app->icon = ($requestedInfo[0]->icon);
+
+        $info = $app;
+        //array_push($requestedAppDetails, $info);
+
+        //////////////////////////////////////////////////////////////////////////////////
+        for ($i=0; $i <= 2; $i++) {
+            //$app = new stdClass();
+            //Obtención de la fecha actual
+            $requestedDate = New DateTime();
+            //Expresión en días del año
+            $requestedDate = $requestedDate->format('z')+1;
+            $requestedDate = $requestedDate-$i;
+
+            $appUses = Usage::whereRaw("DAYOFYEAR(date) = $requestedDate")
+                ->join('apps', 'apps.id', '=', 'usages.app_id')
+                ->select('date', 'event', 'app_id', 'apps.name')
+                ->where('app_id', '=', $requestedAppId[0]->id)
+                ->get();
+            $appUses = $appUses->toArray();
+
+            if(empty($appUses)==true){
+                $totaluse = "Sin uso";
+
+                switch ($i){
+                    case 0:
+                        $app->todayUse = ($totaluse);
+                        $info = $app;
+                        //array_push($requestedAppDetails, $info);
+                        break;
+    
+                    case 1:
+                        $app->yesterdayUse = ($totaluse);
+                        $info = $app;
+                        //array_push($requestedAppDetails, $info);
+                        break;
+    
+                    case 2:
+                        $app->BYUse = ($totaluse);
+                        $info = $app;
+                        //array_push($requestedAppDetails, $info);
+                        break;
+    
+                }
+            }else{
+                $appsUsesLength = count($appUses); //Numero de registros a calcular
+                $appsUsesLength = $appsUsesLength/2; //Numero de operaciones a realizar
+                $appsUsesLength = round($appsUsesLength);
+                $var1 = 0;
+                $var2 = 1;
+                $totaluse = 0;
+
+                $lastevent = DB::table('usages')
+                    ->join('apps', 'apps.id', '=', 'usages.app_id')
+                    ->select('date', 'event', 'app_id', 'apps.name')
+                    ->where('app_id', '=', $requestedAppId[0]->id)
+                    ->latest('date')
+                    ->first();
+            
+
+            
+                if ($appUses[count($appUses)-1]["event"] == "opens") {
+                    for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
+                        $date1 = new DateTime($appUses[$var1]["date"]);
+                        $date2 = new DateTime($appUses[$var2]["date"]);
+                        $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+                        $totaluse = $totaluse + $diff;
+                        $var1 += 2;
+                        $var2 += 2;
+                    }
+                    $date1 = new DateTime($appUses[$var1]["date"]);
+
+                    $date2 = new DateTime($appUses[$var1]["date"]);
+                    $date2->setTime(00, 00, 00);
+                    $date2->modify('+1 day');
+
+                    $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+                    $totaluse += $diff;
+                    
+                }else if($appUses[0]["event"] == "closes") {
+                    print("Ha entrado");
+                    $date1 = new DateTime($appUses[$var1]["date"]);
+
+                    $date2 = new DateTime($appUses[$var1]["date"]);
+                    $date2->setTime(00, 00, 00);
+
+                    $diff = $date1->getTimestamp() - $date2->getTimestamp();
+
+                    $totaluse += $diff;
+                    for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
+                        $date1 = new DateTime($appUses[($var1)+1]["date"]);
+                        $date2 = new DateTime($appUses[($var2)+1]["date"]);
+                        $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+                        $totaluse = $totaluse + $diff;
+                        $var1 += 2;
+                        $var2 += 2;
+                    }
+                }else{
+                    for ($operations = 1; $operations <= $appsUsesLength ; $operations++) {
+                        $date1 = new DateTime($appUses[$var1]["date"]);
+                        $date2 = new DateTime($appUses[$var2]["date"]);
+                        $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+                        $totaluse = $totaluse + $diff;
+                        $var1 += 2;
+                        $var2 += 2;
+                    }
+                }
+                switch ($i){
+                    case 0:
+                        $transformation = new hoursConverter();
+                        $transformation = $transformation->transform($totaluse);
+                        $app->todayUse = $transformation;
+                        $info = $app;
+                        //array_push($requestedAppDetails, $info);
+                        break;
+
+                    case 1:
+                        $transformation = new hoursConverter();
+                        $transformation = $transformation->transform($totaluse);
+                        $app->yesterdayUse = $transformation;
+                        $info = $app;
+                        //array_push($requestedAppDetails, $info);
+                        break;
+
+                    case 2:
+                        $transformation = new hoursConverter();
+                        $transformation = $transformation->transform($totaluse);
+                        $app->BYUse = $transformation;
+                        $info = $app;
+                        //array_push($requestedAppDetails, $info);
+                        break;
+
+                }
+            }
+
+            
+        }
+        //////////////////////////////////////////////////////
+        //$appTotal = new stdClass();
+        $appsUses = DB::table('usages')
+        ->join('apps', 'apps.id', '=', 'usages.app_id')
+        ->select('date', 'event', 'apps.name')
+        ->where('app_id', '=', $requestedAppId[0]->id)
+        ->get();
+
+        $var1 = 0;
+        $var2 = 1;
+        $count = count($appsUses);
+        $laps = $count/2;
+        $totaluse = 0;
+
+        for ($i = 1; $i <= $laps ; $i++) {
+            $date1 = new DateTime($appsUses[$var1]->date);
+            $date2 = new DateTime($appsUses[$var2]->date);
+            $diff = $date2->getTimestamp() - $date1->getTimestamp();
+
+            $totaluse = $totaluse + $diff;
+            $var1 += 2;
+            $var2 += 2;
+        }
+        
+        $transformation = new hoursConverter();
+        $transformation = $transformation->transform($totaluse);
+        $app->TotalUse = $transformation;
+        $info = $app;
+        array_push($requestedAppDetails, $info);
+
+        return response()->json(
+            $requestedAppDetails
+        ,200);
+
     }
 
     public function showAllTimeAppUse(Request $request, $id)

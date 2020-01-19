@@ -39,4 +39,7 @@ Route::middleware(['Checkout'])->group(function(){
     Route::get('showAllAppUseThisWeek', 'usage_controller@showAllAppUseThisWeek');
     Route::get('showAllAppUseThisMonth', 'usage_controller@showAllAppUseThisMonth');
     Route::get('showAllTimeAppUse/{app_id}', 'usage_controller@showAllTimeAppUse');
+    Route::get('appUseDetails/{appName}', 'usage_controller@appUseDetails');
 });
+
+
