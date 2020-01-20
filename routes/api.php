@@ -27,7 +27,7 @@ Route::put('passrestore', 'user_controller@passrestore');
 
 Route::middleware(['Checkout'])->group(function(){
     Route::apiResource('users', 'user_controller');
-    Route::apiResource('restrictions', 'restriction_controller');
+    Route::post('restrictions/{app_id}', 'restriction_controller@store');
     Route::put('passedit', 'user_controller@passedit');
     Route::get('showUserData', 'user_controller@showUserInfo');
     Route::post('usageimport', 'usage_controller@import');

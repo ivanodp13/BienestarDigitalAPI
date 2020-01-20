@@ -36,7 +36,7 @@ class restriction_controller extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, $id)
     {
         $request_token = $request->header('Authorization');
         $token = new token();
@@ -44,8 +44,8 @@ class restriction_controller extends Controller
         $user_email = $decoded_token->email;
         $user = User::where('email', '=', $user_email)->first();
         $user_id = $user->id;
-        
-        $app = App::where('name', '=', $request->App)->first();
+
+        $app = App::where('id', '=', $id)->first();
         if($app == NULL)
         {
             return response()->json([
@@ -62,8 +62,8 @@ class restriction_controller extends Controller
         $restriction->save();
 
         return response()->json([
-            "message" => 'Restricción para la app de '.$request->App.' añadida correctamente'
-        ],401);        
+            "message" => 'Restricción para la app de '.$app->name.' añadida correctamente'
+        ],200);
     }
 
     /**

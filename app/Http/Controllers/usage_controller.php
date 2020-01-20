@@ -210,6 +210,7 @@ class usage_controller extends Controller
 
     public function showAllAppUseToday(Request $request)
     {
+
         //Validación de token
         $request_token = $request->header('Authorization');
         $token = new token();
@@ -772,19 +773,19 @@ class usage_controller extends Controller
                         $info = $app;
                         //array_push($requestedAppDetails, $info);
                         break;
-    
+
                     case 1:
                         $app->yesterdayUse = ($totaluse);
                         $info = $app;
                         //array_push($requestedAppDetails, $info);
                         break;
-    
+
                     case 2:
                         $app->BYUse = ($totaluse);
                         $info = $app;
                         //array_push($requestedAppDetails, $info);
                         break;
-    
+
                 }
             }else{
                 $appsUsesLength = count($appUses); //Numero de registros a calcular
@@ -800,9 +801,9 @@ class usage_controller extends Controller
                     ->where('app_id', '=', $requestedAppId[0]->id)
                     ->latest('date')
                     ->first();
-            
 
-            
+
+
                 if ($appUses[count($appUses)-1]["event"] == "opens") {
                     for ($operations = 1; $operations <= $appsUsesLength-1 ; $operations++) {
                         $date1 = new DateTime($appUses[$var1]["date"]);
@@ -822,7 +823,7 @@ class usage_controller extends Controller
                     $diff = $date2->getTimestamp() - $date1->getTimestamp();
 
                     $totaluse += $diff;
-                    
+
                 }else if($appUses[0]["event"] == "closes") {
                     print("Ha entrado");
                     $date1 = new DateTime($appUses[$var1]["date"]);
@@ -881,7 +882,7 @@ class usage_controller extends Controller
                 }
             }
 
-            
+
         }
         //////////////////////////////////////////////////////
         //$appTotal = new stdClass();
@@ -906,7 +907,7 @@ class usage_controller extends Controller
             $var1 += 2;
             $var2 += 2;
         }
-        
+
         $transformation = new hoursConverter();
         $transformation = $transformation->transform($totaluse);
         $app->TotalUse = $transformation;
