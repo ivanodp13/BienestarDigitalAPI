@@ -353,7 +353,7 @@ class usage_controller extends Controller
             $app->id = ($appsName[($app_id)-1]->id);
             $app->name = ($appsName[($app_id)-1]->name);
             $app->icon = ($appsName[($app_id)-1]->icon);
-
+            $app->seconds = strval($totaluse);
             $transformation = new hoursConverter();
             $transformation = $transformation->transform($totaluse);
             $app->use = $transformation;
@@ -368,6 +368,7 @@ class usage_controller extends Controller
             $app->name = ($appsName[$loop-1]->name);
             $app->icon = ($appsName[$loop-1]->icon);
             $app->use = "Sin usar hoy";
+            $app->seconds = "0";
 
             $todayUse = $app;
             array_push($appsUseList, $todayUse);
@@ -523,7 +524,7 @@ class usage_controller extends Controller
             $app->id = ($appsName[($app_id)-1]->id);
             $app->name = ($appsName[($app_id)-1]->name);
             $app->icon = ($appsName[($app_id)-1]->icon);
-
+            $app->seconds = strval($totaluse);
             $transformation = new hoursConverter();
             $transformation = $transformation->transform($totaluse);
             $app->use = $transformation;
@@ -539,6 +540,7 @@ class usage_controller extends Controller
             $app->name = ($appsName[$loop-1]->name);
             $app->icon = ($appsName[$loop-1]->icon);
             $app->use = "Sin usar hoy";
+            $app->seconds = "0";
 
             $todayUse = $app;
             array_push($appsUseList, $todayUse);
@@ -693,7 +695,7 @@ class usage_controller extends Controller
             $app->id = ($appsName[($app_id)-1]->id);
             $app->name = ($appsName[($app_id)-1]->name);
             $app->icon = ($appsName[($app_id)-1]->icon);
-
+            $app->seconds = strval($totaluse);
             $transformation = new hoursConverter();
             $transformation = $transformation->transform($totaluse);
             $app->use = $transformation;
@@ -708,6 +710,7 @@ class usage_controller extends Controller
             $app->name = ($appsName[$loop-1]->name);
             $app->icon = ($appsName[$loop-1]->icon);
             $app->use = "Sin usar hoy";
+            $app->seconds = "0";
 
             $todayUse = $app;
             array_push($appsUseList, $todayUse);
