@@ -18,22 +18,5 @@ class hoursConverter
             return $hours . " h y " . $minutes . " mins";
         }
     }
-
-    function floatTransform($totaluse){
-
-        $hours = floor($totaluse / 3600);
-        $hoursFloat = floatval($hours);
-        var_dump($hoursFloat);exit;
-        $minutes = floor(($totaluse - ($hours * 3600)) / 60);
-        $seconds = $totaluse - ($hours * 3600) - ($minutes * 60);
-
-        if(($hours == 0) && ($minutes == 0)){
-            return $seconds . " segs";
-        }else if($hours == 0){
-            return $minutes . " mins";
-        }else{
-            return $hours . " h y " . $minutes . " mins";
-        }
-    }
 }
 

@@ -31,14 +31,10 @@ Route::middleware(['Checkout'])->group(function(){
     Route::put('passedit', 'user_controller@passedit');
     Route::get('showUserData', 'user_controller@showUserInfo');
     Route::post('usageimport', 'usage_controller@import');
-    Route::get('showAppLocations/{app_id}', 'usage_controller@showAppLocations');
     Route::get('showUseLocations', 'usage_controller@showUseLocations');
-    Route::get('showLastUsesLocations', 'usage_controller@showLastUsesLocations');
-    Route::get('showAppUse/{app_id}', 'usage_controller@showAppUse');
     Route::get('showAllAppUseToday', 'usage_controller@showAllAppUseToday');
     Route::get('showAllAppUseThisWeek', 'usage_controller@showAllAppUseThisWeek');
     Route::get('showAllAppUseThisMonth', 'usage_controller@showAllAppUseThisMonth');
-    Route::get('showAllTimeAppUse/{app_id}', 'usage_controller@showAllTimeAppUse');
     Route::get('appUseDetails/{appName}', 'usage_controller@appUseDetails');
 });
 
