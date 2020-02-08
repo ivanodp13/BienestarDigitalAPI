@@ -24,8 +24,15 @@ class usage_controller extends Controller
         $user = User::where('email', '=', $user_email)->first();
         $user_id = $user->id;
 
-        $csv = array_map('str_getcsv', file('/Applications/MAMP/htdocs/laravel-ivanodp/BienestarDigital/storage/app/usage.csv'));
+
         //print_r($csv);
+        //var_dump(file('/Applications/MAMP/htdocs/laravel-ivanodp/BienestarDigital/storage/app/usage.csv'));exit;
+
+
+
+        $data = preg_split('/\r\n|\r|\n/', $request->data);
+
+        $csv = array_map('str_getcsv', $data);
 
         $array_num = count($csv);
         for ($i = 1; $i < $array_num; ++$i){
@@ -130,6 +137,8 @@ class usage_controller extends Controller
 
         foreach ($appsIdList as $loop) {
             $app = new stdClass();
+          
+
             //Obtención de los registros del dia de hoy de la app que toca
             $appsUses = Usage::whereRaw("DAYOFYEAR(date) = $requestedDate")
             ->join('apps', 'apps.id', '=', 'usages.app_id')
@@ -208,6 +217,25 @@ class usage_controller extends Controller
                     $var2 += 2;
                 }
             }
+            $appRestriction = DB::table('restrictions')
+            ->select('MaxTime')
+            ->where('app_id', '=', $loop)
+            ->first();
+
+            if ($appRestriction == NULL) {
+                $app->maxTime = "0";
+            } else{
+                $str_time = $appRestriction->MaxTime;
+
+                $str_time = preg_replace("/^([\d]{1,2})\:([\d]{2})$/", "00:$1:$2", $str_time);
+
+                sscanf($str_time, "%d:%d:%d", $hours, $minutes, $seconds);
+
+                $time_seconds = $hours * 3600 + $minutes * 60 + $seconds;
+
+                $app->maxTime =  strval($time_seconds);
+            }
+
             $app->id = ($appsName[($app_id)-1]->id);
             $app->name = ($appsName[($app_id)-1]->name);
             $app->icon = ($appsName[($app_id)-1]->icon);
@@ -222,6 +250,7 @@ class usage_controller extends Controller
         foreach ($nonUsedApps as $loop) {
             $app = new stdClass();
 
+            $app->maxTime = "0";
             $app->id = ($appsName[$loop-1]->id);
             $app->name = ($appsName[$loop-1]->name);
             $app->icon = ($appsName[$loop-1]->icon);

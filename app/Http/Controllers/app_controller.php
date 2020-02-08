@@ -7,10 +7,11 @@ use App\App;
 
 class app_controller extends Controller
 {
-    public function import()
-    {       
-        $csv = array_map('str_getcsv', file('/Applications/MAMP/htdocs/laravel-ivanodp/BienestarDigital/storage/app/appsData.csv'));
-        //print_r($csv);
+    public function import(Request $request)
+    {
+        $data = preg_split('/\r\n|\r|\n/', $request->data);
+
+        $csv = array_map('str_getcsv', $data);
 
         $array_num = count($csv);
         for ($i = 1; $i < $array_num; ++$i){
@@ -34,13 +35,13 @@ class app_controller extends Controller
                 $app->icon = $csv[$i][1];
                 $app->save();
             }
-            
+
         }
         return response()->json([
             "message" => 'Importación realizada con éxito'
-        ],200);       
+        ],200);
     }
- 
+
     /**
      * Display a listing of the resource.
      *
